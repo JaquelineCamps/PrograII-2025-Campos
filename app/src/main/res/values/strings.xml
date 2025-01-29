@@ -1,3 +1,15 @@
 <resources>
-    <string name="app_name">HolaMundo</string>
+    <string name="app_name">Conversor de Unidades</string>
+
+    <string name="titulo">Conversor de Unidades</string>
+    <string name="hint_value">Introduce el valor</string>
+    <string name="boton_convertir">Convertir</string>
+    <string name="resultado_label">Resultado:</string>
+
+    <string-array name="units_array">
+        <item>Metros</item>
+        <item>Kilómetros</item>
+        <item>Centímetros</item>
+        <item>Milímetros</item>
+    </string-array>
 </resources>
