@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">HolaMundo</string>
+    <string name="app_name">holaMundo</string>
+    <string-array name="conversor">
+        <item>Monedas</item>
+        <item>Tiempo</item>
+        <item>Almacenamiento</item>
+        <item>Longitud</item><!-- TAREA - LABORATORIO -->
+    </string-array>
 </resources>
