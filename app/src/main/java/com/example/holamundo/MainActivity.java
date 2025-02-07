@@ -1,53 +1,72 @@
 package com.example.holamundo;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Space;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-public class MainActivity extends AppCompatActivity {
-
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+public class MainActivity extends Activity {
+    Button btn;
+    TextView tempVal;
+    FloatingActionButton fab;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
-        EditText editTextName = findViewById(R.id.editTextName);
-        EditText editTextSurname = findViewById(R.id.editTextSurname);
-        Button buttonGreet = findViewById(R.id.buttonGreet);
-
-        buttonGreet.setOnClickListener(new View.OnClickListener() {
+        btn = findViewById(R.id.btnGuardarAmigos);
+        btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Obtener los datos ingresados por el usuario
-                String name = editTextName.getText().toString();
-                String surname = editTextSurname.getText().toString();
-                Intent intent = new Intent(MainActivity.this, MainActivity2.class);
-                intent.putExtra("name", name); // Pasar el nombre
-                intent.putExtra("surname", surname); // Pasar el apellido
-                startActivity(intent); // Iniciar la nueva actividad
+                guardarAmigos();
+            }
+        });
+        fab = findViewById(R.id.fabRegresarlistaAmigos);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                regresarListaAmigos();
             }
         });
     }
-    public void Saludar (View view) {
-        Intent Saludar = new Intent(this, MainActivity2.class);
-        startActivity(Saludar);
+    void guardarAmigos(){
+        tempVal = findViewById(R.id.txtnombre);
+        String nombre = tempVal.getText().toString();
+        tempVal = findViewById(R.id.txtdireccion);
+        String direccion = tempVal.getText().toString();
+        tempVal = findViewById(R.id.txttelefono);
+        String telefono = tempVal.getText().toString();
+        tempVal = findViewById(R.id.txtemail);
+        String email = tempVal.getText().toString();
+        tempVal = findViewById(R.id.txtdui);
+        String dui = tempVal.getText().toString();
+        DB db = new DB(getApplicationContext(), "", null, 1);
+        String resp = db.administrar_amigos("nuevo", new String[]{
+                "",nombre, direccion, telefono, email, dui
+        });
+        if( resp.equals("ok") ){
+            mostrarMsg("Amigo almacenado con exito...");
+            regresarListaAmigos();
+        }
+    }
+    void regresarListaAmigos(){
+        Intent abrirActividad = new Intent(getApplicationContext(), listado_amigos.class);
+        startActivity(abrirActividad);
+    }
+    void mostrarMsg(String msg){
+        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
     }
 }
-
-
-
