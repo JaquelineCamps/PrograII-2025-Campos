@@ -39,6 +39,51 @@ public class listado_amigos extends Activity {
         obtenerDatosAmigos();
     }
 
+    private void obtenerDatosAmigos() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final String resultado = new obtenerDatosServidor().executeRequest();
+
+                    // Volver al hilo principal para actualizar la UI
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.d(TAG, "JSON completo: " + resultado);
+
+                            if (resultado != null) {
+                                try {
+                                    jsonObject = new JSONObject(resultado);
+                                    jsonArray = jsonObject.getJSONArray("rows");
+                                    Log.d(TAG, "Estructura del jsonArray: " + jsonArray.toString());
+                                    Log.d(TAG, "Número de filas obtenidas: " + jsonArray.length());
+                                    mostrarDatosAmigos();
+                                } catch (Exception e) {
+                                    mostrarMsg("Error al procesar JSON: " + e.getMessage());
+                                    Log.e(TAG, "Error al procesar JSON: " + e.getMessage());
+                                }
+                            } else {
+                                mostrarMsg("No se pudieron obtener datos del servidor");
+                                Log.e(TAG, "Resultado del servidor es nulo");
+                            }
+                        }
+                    });
+                } catch (Exception e) {
+                    final String errorMsg = e.getMessage();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mostrarMsg("Error: " + errorMsg);
+                            Log.e(TAG, "Error en la obtención de datos: " + errorMsg);
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
+    // El resto de los métodos permanecen igual
     private void mostrarMsg(String msg) {
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
     }
@@ -49,37 +94,6 @@ public class listado_amigos extends Activity {
         startActivity(abrirActividad);
     }
 
-    private void obtenerDatosAmigos() {
-        new ObtenerDatosAmigosTask().execute();
-    }
-
-    private class ObtenerDatosAmigosTask extends AsyncTask<Void, Void, String> {
-        @Override
-        protected String doInBackground(Void... voids) {
-            obtenerDatosServidor datosServidor = new obtenerDatosServidor();
-            return datosServidor.executeRequest();
-        }
-
-        @Override
-        protected void onPostExecute(String resultado) {
-            Log.d(TAG, "Resultado del servidor: " + resultado);
-            if (resultado != null) {
-                try {
-                    jsonObject = new JSONObject(resultado);
-                    jsonArray = jsonObject.getJSONArray("rows");
-                    Log.d(TAG, "Número de filas obtenidas: " + jsonArray.length());
-                    mostrarDatosAmigos();
-                } catch (Exception e) {
-                    mostrarMsg("Error al procesar JSON: " + e.getMessage());
-                    Log.e(TAG, "Error al procesar JSON: " + e.getMessage());
-                }
-            } else {
-                mostrarMsg("No se pudieron obtener datos del servidor");
-                Log.e(TAG, "Resultado del servidor es nulo");
-            }
-        }
-    }
-
     private void mostrarDatosAmigos() {
         try {
             Log.d(TAG, "Mostrando datos de amigos...");
@@ -87,32 +101,36 @@ public class listado_amigos extends Activity {
                 lts = findViewById(R.id.ltsAmigos);
                 amigosArrayList.clear();
 
-                JSONObject misDatosJsonObject;
                 for (int i = 0; i < jsonArray.length(); i++) {
-                    misDatosJsonObject = jsonArray.getJSONObject(i).getJSONObject("key");
-                    Log.d(TAG, "Datos del amigo: " + misDatosJsonObject.toString());
+                    JSONObject row = jsonArray.getJSONObject(i);
+                    JSONObject key = row.getJSONObject("key");
+
+                    Log.d(TAG, "Row " + i + ": " + row.toString());
+                    Log.d(TAG, "Key " + i + ": " + key.toString());
+
                     misAmigos = new amigos(
-                            misDatosJsonObject.getString("_id"),
-                            misDatosJsonObject.getString("_rev"),
-                            misDatosJsonObject.getString("idAmigo"),
-                            misDatosJsonObject.getString("nombre"),
-                            misDatosJsonObject.getString("telefono"),
-                            misDatosJsonObject.getString("email")
+                            key.optString("_id", ""),
+                            key.optString("_rev", ""),
+                            key.optString("idAmigo", ""),
+                            key.optString("nombre", ""),
+                            key.optString("telefono", ""),
+                            key.optString("email", "")
                     );
                     amigosArrayList.add(misAmigos);
                 }
+
                 adaptadorAmigos adapterAmigos = new adaptadorAmigos(listado_amigos.this, amigosArrayList);
                 lts.setAdapter(adapterAmigos);
                 registerForContextMenu(lts);
             } else {
                 mostrarMsg("No hay datos que mostrar...");
-                Log.d(TAG, "No hay datos que mostrar...");
                 parametros.putString("accion", "nuevo");
                 abrirActividad(parametros);
             }
         } catch (Exception e) {
             mostrarMsg("Error al mostrar: " + e.getMessage());
             Log.e(TAG, "Error al mostrar: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

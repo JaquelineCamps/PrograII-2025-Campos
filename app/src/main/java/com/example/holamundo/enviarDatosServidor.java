@@ -23,8 +23,7 @@ public class enviarDatosServidor extends AsyncTask<String, String, String> {
         this.context = context;
     }
 
-    @Override
-    protected String doInBackground(String... parametros) {
+    public String doInBackground(String... parametros) {
         String jsonResponse = null;
         String jsonDatos = parametros[0];
         BufferedReader bufferedReader = null;
@@ -44,7 +43,6 @@ public class enviarDatosServidor extends AsyncTask<String, String, String> {
             httpURLConnection.setConnectTimeout(15000);
             httpURLConnection.setReadTimeout(15000);
 
-            // Enviar datos
             writer = new BufferedWriter(new OutputStreamWriter(httpURLConnection.getOutputStream(), "UTF-8"));
             writer.write(jsonDatos);
             writer.flush();
@@ -83,4 +81,5 @@ public class enviarDatosServidor extends AsyncTask<String, String, String> {
         }
         return jsonResponse;
     }
+
 }

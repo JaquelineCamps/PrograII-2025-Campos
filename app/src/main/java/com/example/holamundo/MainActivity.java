@@ -80,41 +80,54 @@ public class MainActivity extends Activity {
 
             Log.d(TAG, "Datos a enviar: " + datosAmigos.toString());
 
-            new EnviarDatosAmigosTask().execute(datosAmigos.toString());
+            // Crear nuevo hilo para la operación de red
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        enviarDatosServidor objEnviarDatosServidor = new enviarDatosServidor(getApplicationContext());
+                        final String respuesta = objEnviarDatosServidor.doInBackground(datosAmigos.toString());
+
+                        // Volver al hilo principal para actualizar la UI
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                procesarRespuestaServidor(respuesta);
+                            }
+                        });
+                    } catch (Exception e) {
+                        final String errorMsg = e.getMessage();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mostrarMsg("Error: " + errorMsg);
+                                Log.e(TAG, "Error al guardar amigo: " + errorMsg);
+                            }
+                        });
+                    }
+                }
+            }).start();
 
         } catch (Exception e) {
             mostrarMsg("Error: " + e.getMessage());
-            Log.e(TAG, "Error al guardar amigo: " + e.getMessage());
+            Log.e(TAG, "Error al preparar datos: " + e.getMessage());
         }
     }
 
-    private class EnviarDatosAmigosTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... params) {
-            try {
-                enviarDatosServidor objEnviarDatosServidor = new enviarDatosServidor(getApplicationContext());
-                return objEnviarDatosServidor.execute(params[0]).get();
-            } catch (Exception e) {
-                return "Error: " + e.getMessage();
+    private void procesarRespuestaServidor(String respuesta) {
+        Log.d(TAG, "Respuesta del servidor: " + respuesta);
+        try {
+            JSONObject respuestaJson = new JSONObject(respuesta);
+            if (respuestaJson.has("ok") && respuestaJson.getBoolean("ok")) {
+                mostrarMsg("Amigo guardado exitosamente");
+                regresarListaAmigos();
+            } else {
+                mostrarMsg("Error al guardar: " + respuesta);
+                Log.e(TAG, "Error al guardar: " + respuesta);
             }
-        }
-
-        @Override
-        protected void onPostExecute(String respuesta) {
-            Log.d(TAG, "Respuesta del servidor: " + respuesta);
-            try {
-                JSONObject respuestaJson = new JSONObject(respuesta);
-                if (respuestaJson.has("ok") && respuestaJson.getBoolean("ok")) {
-                    mostrarMsg("Amigo guardado exitosamente");
-                    regresarListaAmigos();
-                } else {
-                    mostrarMsg("Error al guardar: " + respuesta);
-                    Log.e(TAG, "Error al guardar: " + respuesta);
-                }
-            } catch (Exception e) {
-                mostrarMsg("Error: " + e.getMessage());
-                Log.e(TAG, "Error al procesar respuesta del servidor: " + e.getMessage());
-            }
+        } catch (Exception e) {
+            mostrarMsg("Error: " + e.getMessage());
+            Log.e(TAG, "Error al procesar respuesta del servidor: " + e.getMessage());
         }
     }
 
